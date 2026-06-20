@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.local
+.env
+.DS_Store
+
+# локальный бэкап исходного фото
+client/public/assets/bag-fluffy-original.png

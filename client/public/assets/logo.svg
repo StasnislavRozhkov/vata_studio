@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 200" width="520" height="200">
+  <!-- Временный логотип-заглушка. Замени на assets/logo.svg (или .png) с настоящим лого vata. -->
+  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="700"
+        font-size="160" letter-spacing="-4" fill="#1f1f23">vata</text>
+</svg>

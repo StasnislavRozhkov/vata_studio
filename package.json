@@ -1,0 +1,12 @@
+{
+  "name": "vata-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Лендинг бренда сумок vata — React + TS (Vite) фронт и Node.js (Express) бэкенд",
+  "scripts": {
+    "postinstall": "npm --prefix client install && npm --prefix server install",
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build && npm --prefix server run build",
+    "start": "npm --prefix server run start"
+  }
+}
