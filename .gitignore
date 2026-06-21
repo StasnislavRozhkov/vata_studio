@@ -9,3 +9,6 @@ client/public/assets/bag-fluffy-original.png
 
 # артефакт инкрементальной сборки TS
 *.tsbuildinfo
+
+# исходник видео (тяжёлый) — в репо только сжатые версии
+client/public/assets/bags-source.mp4

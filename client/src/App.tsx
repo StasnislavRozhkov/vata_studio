@@ -5,6 +5,7 @@ import { Carousel } from './components/Carousel';
 import { Divider } from './components/Divider';
 import { AnimatedText } from './components/AnimatedText';
 import { Reveal } from './components/Reveal';
+import { VideoBlock } from './components/VideoBlock';
 import { collections, INITIAL_INDEX } from './data/collections';
 
 // Длительности интро (мс)
@@ -197,6 +198,25 @@ export default function App() {
               </button>
             </nav>
           </section>
+        </section>
+
+        {/* Видео-анимация всех сумок — наверху, вне keyed .story (не рестартует) */}
+        <Divider variant={1} />
+        <section className="media">
+          <AnimatedText as="p" className="block__eyebrow" text="На заказ" stagger={0.03} />
+          <AnimatedText
+            as="h2"
+            className="block__h"
+            text={'Любой цвет\nпод ваш запрос'}
+            stagger={0.06}
+          />
+          <AnimatedText
+            as="p"
+            className="block__p"
+            text="Не ограничивайтесь палитрой — сошьём сумку в любом цвете по вашему запросу. Напишите нам, и подберём оттенок и материал индивидуально."
+            stagger={0.012}
+          />
+          <VideoBlock />
         </section>
 
         {/* Контент конкретной сумки — меняется вместе с коллекцией.

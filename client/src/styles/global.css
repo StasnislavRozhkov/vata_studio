@@ -551,6 +551,45 @@ body {
   color: color-mix(in srgb, var(--c-text) 70%, transparent);
 }
 
+/* ---------- Видео-анимация сумок ---------- */
+.media {
+  margin-top: 6px;
+}
+.media__frame {
+  margin-top: 18px;
+  /* выходим за боковые отступы .stage (22px) -> видео крупнее, на всю ширину */
+  margin-left: -22px;
+  margin-right: -22px;
+  /* фон = фон страницы: multiply убирает белое (в этот цвет), а сильное
+     растворение краёв прячет границы прямоугольника -> белого «фона» не видно */
+  background: var(--c-bg);
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 15%, #000 85%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 15%, #000 85%, transparent 100%);
+  mask-composite: intersect;
+}
+.media__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* запасной путь (без alpha): белый фон гасится multiply на светлой теме */
+  mix-blend-mode: multiply;
+}
+
+/* Прозрачное видео (VP9 alpha) — фон уже вырезан, никаких подложек/блендов */
+.media__frame--alpha {
+  background: transparent;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.media__frame--alpha .media__video {
+  mix-blend-mode: normal;
+}
+
 /* ---------- Подвал ---------- */
 .foot {
   margin-top: 56px;
