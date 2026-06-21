@@ -57,74 +57,6 @@ body {
 .is-ready .bg-gradient { opacity: 1; }
 
 /* ============================================================
-   БОКОВЫЕ ЗОНЫ: свечение + стрелки
-   ============================================================ */
-.edge {
-  /* absolute внутри .screen — стрелки покрывают только первый экран,
-     а не весь скролл (иначе их хит-зона перекрывает подвал) */
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 64px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--c-text);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.7s ease 1.3s, color 0.8s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.is-ready .edge { opacity: 1; }
-.edge:disabled { opacity: 0.18; cursor: default; }
-.is-ready .edge:disabled { opacity: 0.18; }
-/* -22px компенсирует боковой padding .stage, чтобы стрелки были у самого края экрана */
-.edge--left { left: -22px; }
-.edge--right { right: -22px; }
-
-.edge__glow {
-  position: absolute;
-  top: 50%;
-  width: 140px;
-  height: 320px;
-  transform: translateY(-50%);
-  filter: blur(34px);
-  opacity: 0.55;
-  pointer-events: none;
-  animation: edge-pulse 6s ease-in-out infinite;
-}
-.edge--left .edge__glow {
-  left: -70px;
-  background: radial-gradient(circle, var(--c-edge), transparent 70%);
-}
-.edge--right .edge__glow {
-  right: -70px;
-  background: radial-gradient(circle, var(--c-edge), transparent 70%);
-}
-@keyframes edge-pulse {
-  0%,100% { opacity: 0.35; transform: translateY(-50%) scale(1); }
-  50%     { opacity: 0.65; transform: translateY(-50%) scale(1.12); }
-}
-
-.edge__arrow {
-  width: 26px;
-  height: 26px;
-  position: relative;
-  filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
-  animation: arrow-nudge 2.4s ease-in-out infinite;
-}
-.edge--right .edge__arrow { animation-delay: 1.2s; }
-@keyframes arrow-nudge {
-  0%,100% { transform: translateX(0); opacity: 0.8; }
-  50%     { transform: translateX(var(--nudge, 0)); opacity: 1; }
-}
-.edge--left  .edge__arrow { --nudge: -4px; }
-.edge--right .edge__arrow { --nudge: 4px; }
-
-/* ============================================================
    STAGE / контент
    ============================================================ */
 .stage {
@@ -274,10 +206,10 @@ body {
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  animation: img-fade 0.4s ease both;
+  animation: img-fade 0.8s cubic-bezier(0.33, 0, 0.2, 1) both;
 }
 @keyframes img-fade {
-  from { opacity: 0; transform: scale(0.985); }
+  from { opacity: 0; transform: scale(0.99); }
   to   { opacity: 1; transform: scale(1); }
 }
 
@@ -386,23 +318,24 @@ body {
   color: color-mix(in srgb, var(--c-text) 65%, transparent);
 }
 
-/* ---------- Точки-индикаторы: плавающая пилюля в стиле Apple Liquid Glass ---------- */
-.dots {
+/* ---------- Навигатор коллекций: плавающая пилюля Apple Liquid Glass ----------
+   Зафиксирована внизу -> переключать коллекции можно из любой точки сайта.
+   Внутри: стрелка ‹  • • •  стрелка › */
+.navbar {
   position: fixed;
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%) translateY(8px);
   z-index: 20;
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border-radius: 999px;
   overflow: hidden; /* чтобы блик не вылезал за края */
   isolation: isolate;
 
   /* --- Liquid Glass --- */
-  /* лёгкая стеклянная заливка + преломление фона под пилюлей */
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.45),
@@ -412,22 +345,19 @@ body {
   -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(1.06);
   border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow:
-    /* верхний внутренний блик — «толщина» стекла */
     inset 0 1px 1px rgba(255, 255, 255, 0.9),
     inset 0 -1px 2px rgba(255, 255, 255, 0.35),
-    /* мягкое внутреннее свечение по кругу */
     inset 0 0 10px rgba(255, 255, 255, 0.25),
-    /* падающая тень */
     0 6px 20px rgba(40, 36, 60, 0.22),
     0 1px 2px rgba(40, 36, 60, 0.12);
 
   opacity: 0;
   transition: opacity 0.7s ease 1.15s, transform 0.7s ease 1.15s;
 }
-.is-ready .dots { opacity: 1; transform: translateX(-50%) translateY(0); }
+.is-ready .navbar { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* Бегущий зеркальный блик по стеклу */
-.dots::before {
+.navbar::before {
   content: '';
   position: absolute;
   inset: -40%;
@@ -445,6 +375,62 @@ body {
 @keyframes glass-sheen {
   0%, 55% { transform: translateX(-120%); }
   85%, 100% { transform: translateX(120%); }
+}
+
+/* Стрелки prev/next внутри пилюли */
+.navbtn {
+  position: relative;
+  z-index: 1; /* над бликом */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.25s ease, transform 0.2s ease, opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.navbtn svg {
+  width: 17px;
+  height: 17px;
+}
+.navbtn:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+/* лёгкий «магнитный» сдвиг шеврона + подложка при наведении/нажатии */
+.navbtn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--c-text) 9%, transparent);
+}
+.navbtn:not(:disabled):active {
+  transform: scale(0.86);
+}
+/* живой намёк: шеврон мягко покачивается в свою сторону */
+.navbtn--prev:not(:disabled) svg { animation: navnudge-l 2.8s ease-in-out infinite; }
+.navbtn--next:not(:disabled) svg { animation: navnudge-r 2.8s ease-in-out infinite; }
+.navbtn--prev:not(:disabled):hover svg { animation-play-state: paused; transform: translateX(-3px); transition: transform 0.3s ease; }
+.navbtn--next:not(:disabled):hover svg { animation-play-state: paused; transform: translateX(3px); transition: transform 0.3s ease; }
+@keyframes navnudge-l {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-2.5px); }
+}
+@keyframes navnudge-r {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2.5px); }
+}
+
+/* Внутренний ряд точек */
+.dots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
 .dot {
@@ -477,11 +463,9 @@ body {
 .divider {
   margin: 40px 0;
   color: var(--c-accent);
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 0.9;
+  /* появление — через GSAP (прорисовка нитки), см. Divider.tsx */
 }
-.is-ready .divider { opacity: 0.9; transform: translateY(0); }
 .divider__thread {
   display: block;
   width: 100%;
@@ -491,20 +475,8 @@ body {
 
 /* ============================================================
    КОНТЕНТНЫЕ БЛОКИ
-   ============================================================ */
-.block {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s;
-}
-.is-ready .block { opacity: 1; transform: translateY(0); }
-
-/* Контент-история сумки: перерисовывается при смене коллекции */
-.story { animation: story-in 0.55s ease both; }
-@keyframes story-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+   ============================================================
+   Появление текста и блоков — через GSAP (AnimatedText / Reveal). */
 
 /* Характеристики */
 .specs {
@@ -635,8 +607,44 @@ body {
 }
 
 /* Доступность: меньше движения */
+/* Слово для GSAP-анимации появления текста */
+.aw {
+  display: inline-block;
+}
+
+/* ============================================================
+   Доступность: focus для клавиатуры + tap-отклик
+   ============================================================ */
+.dot:focus-visible,
+.swatch:focus-visible,
+.navbtn:focus-visible,
+.social:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+}
+.swatch:active { transform: scale(0.94); }
+.dot:active { transform: scale(0.9); }
+.social:active { transform: translateY(0) scale(0.95); }
+
+/* Доступность: меньше движения */
 @media (prefers-reduced-motion: reduce) {
-  .bg__blob, .edge__glow, .edge__arrow { animation: none !important; }
-  .brand--center .brand__logo,
-  .brand--docked { animation-duration: 0.3s; }
+  .slide__glow,
+  .navbar::before, /* glass-sheen */
+  .navbtn--prev svg,
+  .navbtn--next svg {
+    animation: none !important;
+  }
+  .brand__logo {
+    transition-duration: 0.3s !important;
+  }
+  /* мгновенное появление без сдвигов */
+  .slide__bag,
+  .hero__meta,
+  .navbar,
+  .block,
+  .divider,
+  .story {
+    transition-duration: 0.2s !important;
+    animation-duration: 0.2s !important;
+  }
 }

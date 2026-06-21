@@ -6,3 +6,6 @@ dist/
 
 # локальный бэкап исходного фото
 client/public/assets/bag-fluffy-original.png
+
+# артефакт инкрементальной сборки TS
+*.tsbuildinfo

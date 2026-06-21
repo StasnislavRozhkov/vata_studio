@@ -32,7 +32,18 @@ export function Background({ colors }: Props) {
     g.initGradient('#gradient-canvas');
     gradientRef.current = g;
 
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) g.pause();
+
+    // экономим ресурсы: пауза анимации, когда вкладка не активна
+    const onVisibility = () => {
+      if (document.hidden) g.pause();
+      else if (!reduce) g.play();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       g.pause();
     };

@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Background } from './components/Background';
 import { Brand } from './components/Brand';
-import { EdgeArrows } from './components/EdgeArrows';
 import { Carousel } from './components/Carousel';
 import { Divider } from './components/Divider';
+import { AnimatedText } from './components/AnimatedText';
+import { Reveal } from './components/Reveal';
 import { collections, INITIAL_INDEX } from './data/collections';
 
 // Длительности интро (мс)
 const LOGO_HOLD = 1900; // сколько логотип стоит по центру
 const REVEAL = 1200; // переход логотипа наверх + появление сумки/фона
+const COLOR_INTERVAL = 6000; // интервал автосмены цвета сумки
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function App() {
   const [index, setIndex] = useState(INITIAL_INDEX);
@@ -16,6 +22,7 @@ export default function App() {
   const [ready, setReady] = useState(false); // интерфейс раскрылся
   // выбранный вариант цвета для каждой коллекции (по id)
   const [variantByCol, setVariantByCol] = useState<Record<string, number>>({});
+  const [pageVisible, setPageVisible] = useState(true);
 
   // Запуск интро-таймлайна
   useEffect(() => {
@@ -66,16 +73,44 @@ export default function App() {
 
   // Автоперебор цветов: каждые 4 c -> следующий вариант (по кругу).
   // Зависит от activeVariant, поэтому ручной выбор сбрасывает таймер.
+  // Стоп при reduced-motion и когда вкладка не активна.
   useEffect(() => {
-    if (!ready || active.variants.length < 2) return;
+    if (!ready || !pageVisible || prefersReducedMotion()) return;
+    if (active.variants.length < 2) return;
     const t = window.setTimeout(() => {
       setVariantByCol((m) => {
         const cur = m[active.id] ?? 0;
         return { ...m, [active.id]: (cur + 1) % active.variants.length };
       });
-    }, 4000);
+    }, COLOR_INTERVAL);
     return () => window.clearTimeout(t);
-  }, [ready, active.id, activeVariant, active.variants.length]);
+  }, [ready, pageVisible, active.id, activeVariant, active.variants.length]);
+
+  // Отслеживаем видимость вкладки (для паузы автоперебора)
+  useEffect(() => {
+    const onVis = () => setPageVisible(!document.hidden);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  // Предзагрузка фото вариантов активной коллекции -> мгновенное переключение
+  useEffect(() => {
+    active.variants.forEach((v) => {
+      const img = new Image();
+      img.src = v.image;
+    });
+  }, [active]);
+
+  // Клавиатура: ← / → переключают коллекции
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
+      else if (e.key === 'ArrowRight')
+        setIndex((i) => Math.min(collections.length - 1, i + 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div
@@ -87,15 +122,6 @@ export default function App() {
       <main className="stage">
         {/* Первый экран — на всю высоту телефона */}
         <section className="screen">
-          {/* стрелки живут внутри первого экрана, чтобы их кликабельная
-              зона не накрывала нижний контент (например, иконки в подвале) */}
-          <EdgeArrows
-            canPrev={index > 0}
-            canNext={index < collections.length - 1}
-            onPrev={prev}
-            onNext={next}
-          />
-
           <Brand />
 
           <section className="hero">
@@ -109,7 +135,13 @@ export default function App() {
             />
 
             <div className="hero__meta">
-              <h1 className="hero__title">{active.name}</h1>
+              <AnimatedText
+                as="h1"
+                className="hero__title"
+                text={active.name}
+                immediate
+                stagger={0.07}
+              />
 
               {/* Образцы цвета — переключают фото текущей коллекции */}
               {active.variants.length > 1 && (
@@ -129,16 +161,41 @@ export default function App() {
               )}
             </div>
 
-            <div className="dots">
-              {collections.map((c, i) => (
-                <button
-                  key={c.id}
-                  className={`dot ${i === index ? 'dot--on' : ''}`}
-                  onClick={() => setIndex(i)}
-                  aria-label={`Коллекция ${c.name}`}
-                />
-              ))}
-            </div>
+            {/* Навигатор коллекций — зафиксирован внизу, доступен с любой точки */}
+            <nav className="navbar" aria-label="Коллекции">
+              <button
+                className="navbtn navbtn--prev"
+                onClick={prev}
+                disabled={index === 0}
+                aria-label="Предыдущая коллекция"
+              >
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              <div className="dots">
+                {collections.map((c, i) => (
+                  <button
+                    key={c.id}
+                    className={`dot ${i === index ? 'dot--on' : ''}`}
+                    onClick={() => setIndex(i)}
+                    aria-label={`Коллекция ${c.name}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                className="navbtn navbtn--next"
+                onClick={next}
+                disabled={index === collections.length - 1}
+                aria-label="Следующая коллекция"
+              >
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </nav>
           </section>
         </section>
 
@@ -148,14 +205,14 @@ export default function App() {
           <Divider variant={1} />
 
           <section className="block">
-            <p className="block__eyebrow">{active.story.eyebrow}</p>
-            <h2 className="block__h">{active.story.heading}</h2>
-            <p className="block__p">{active.story.description}</p>
+            <AnimatedText as="p" className="block__eyebrow" text={active.story.eyebrow} stagger={0.025} />
+            <AnimatedText as="h2" className="block__h" text={active.story.heading} stagger={0.06} />
+            <AnimatedText as="p" className="block__p" text={active.story.description} stagger={0.012} />
           </section>
 
           <Divider variant={2} />
 
-          <section className="block block--list">
+          <Reveal as="section" className="block block--list" stagger={0.12}>
             {active.story.features.map((f, i) => (
               <Feature
                 key={f.title}
@@ -164,24 +221,24 @@ export default function App() {
                 text={f.text}
               />
             ))}
-          </section>
+          </Reveal>
 
           <Divider variant={1} />
 
           <section className="block block--specs">
-            <p className="block__eyebrow">Характеристики</p>
-            <dl className="specs">
+            <AnimatedText as="p" className="block__eyebrow" text="Характеристики" stagger={0.03} />
+            <Reveal as="dl" className="specs" stagger={0.08}>
               {active.story.specs.map((s) => (
                 <div className="specs__row" key={s.label}>
                   <dt className="specs__label">{s.label}</dt>
                   <dd className="specs__value">{s.value}</dd>
                 </div>
               ))}
-            </dl>
+            </Reveal>
           </section>
         </div>
 
-        <footer className="foot">
+        <Reveal as="footer" className="foot" stagger={0.12}>
           <div className="foot__top">
             <span className="foot__mark">vata</span>
             <div className="foot__social">
@@ -219,7 +276,7 @@ export default function App() {
             </div>
           </div>
           <span className="foot__copy">© 2026 — сделано вручную</span>
-        </footer>
+        </Reveal>
       </main>
     </div>
   );
