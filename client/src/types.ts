@@ -27,21 +27,10 @@ export interface Story {
   specs: Spec[];
 }
 
-/** Цветовой вариант сумки внутри коллекции */
-export interface Variant {
-  id: string;
-  name: string; // название цвета, напр. «Чёрный»
-  swatch: string; // hex для кружка-образца
-  image: string; // путь к фото
-  /** Своя палитра фона/акцентов под этот цвет (если нет — берётся палитра коллекции) */
-  palette?: Palette;
-}
-
 export interface Collection {
   id: string;
   name: string;
-  subtitle: string;
-  variants: Variant[];
+  image: string; // путь к фото сумки
   palette: Palette;
   story: Story;
 }

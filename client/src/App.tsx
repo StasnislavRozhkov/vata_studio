@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Background } from './components/Background';
 import { Brand } from './components/Brand';
-import { Carousel } from './components/Carousel';
 import { Divider } from './components/Divider';
 import { AnimatedText } from './components/AnimatedText';
 import { Reveal } from './components/Reveal';
@@ -10,20 +9,11 @@ import { collections, INITIAL_INDEX } from './data/collections';
 
 // Длительности интро (мс)
 const LOGO_HOLD = 1900; // сколько логотип стоит по центру
-const REVEAL = 1200; // переход логотипа наверх + появление сумки/фона
-const COLOR_INTERVAL = 6000; // интервал автосмены цвета сумки
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REVEAL = 1200; // переход логотипа наверх + появление фона
 
 export default function App() {
-  const [index, setIndex] = useState(INITIAL_INDEX);
   const [entered, setEntered] = useState(false); // логотип проявился по центру
   const [ready, setReady] = useState(false); // интерфейс раскрылся
-  // выбранный вариант цвета для каждой коллекции (по id)
-  const [variantByCol, setVariantByCol] = useState<Record<string, number>>({});
-  const [pageVisible, setPageVisible] = useState(true);
 
   // Запуск интро-таймлайна
   useEffect(() => {
@@ -39,13 +29,13 @@ export default function App() {
     };
   }, []);
 
-  const active = collections[Math.min(index, collections.length - 1)];
-  const activeVariant = Math.min(variantByCol[active.id] ?? 0, active.variants.length - 1);
-  // Палитра выбранного цвета (или палитра коллекции, если у варианта своей нет)
-  const activePalette = active.variants[activeVariant].palette ?? active.palette;
+  const active = collections[INITIAL_INDEX]; // центральная коллекция — Fluffy
+  const activePalette = active.palette;
+  // Соседние коллекции — выглядывают по бокам за центральной сумкой
+  const sideLeft = collections[INITIAL_INDEX - 1]; // Metallic
+  const sideRight = collections[INITIAL_INDEX + 1]; // Standard
 
   // Палитра -> CSS-переменные на корне.
-  // @property в CSS делает переходы цвета плавными при смене коллекции/цвета.
   const paletteVars = useMemo<CSSProperties>(() => {
     const p = activePalette;
     return {
@@ -66,53 +56,6 @@ export default function App() {
     [activePalette],
   );
 
-  const prev = () => setIndex((i) => Math.max(0, i - 1));
-  const next = () => setIndex((i) => Math.min(collections.length - 1, i + 1));
-
-  const selectVariant = (v: number) =>
-    setVariantByCol((m) => ({ ...m, [active.id]: v }));
-
-  // Автоперебор цветов: каждые 4 c -> следующий вариант (по кругу).
-  // Зависит от activeVariant, поэтому ручной выбор сбрасывает таймер.
-  // Стоп при reduced-motion и когда вкладка не активна.
-  useEffect(() => {
-    if (!ready || !pageVisible || prefersReducedMotion()) return;
-    if (active.variants.length < 2) return;
-    const t = window.setTimeout(() => {
-      setVariantByCol((m) => {
-        const cur = m[active.id] ?? 0;
-        return { ...m, [active.id]: (cur + 1) % active.variants.length };
-      });
-    }, COLOR_INTERVAL);
-    return () => window.clearTimeout(t);
-  }, [ready, pageVisible, active.id, activeVariant, active.variants.length]);
-
-  // Отслеживаем видимость вкладки (для паузы автоперебора)
-  useEffect(() => {
-    const onVis = () => setPageVisible(!document.hidden);
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, []);
-
-  // Предзагрузка фото вариантов активной коллекции -> мгновенное переключение
-  useEffect(() => {
-    active.variants.forEach((v) => {
-      const img = new Image();
-      img.src = v.image;
-    });
-  }, [active]);
-
-  // Клавиатура: ← / → переключают коллекции
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
-      else if (e.key === 'ArrowRight')
-        setIndex((i) => Math.min(collections.length - 1, i + 1));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   return (
     <div
       className={`app ${entered ? 'is-entered' : ''} ${ready ? 'is-ready' : 'is-intro'}`}
@@ -126,14 +69,38 @@ export default function App() {
           <Brand />
 
           <section className="hero">
-            <Carousel
-              collections={collections}
-              index={index}
-              ready={ready}
-              variantByCol={variantByCol}
-              onPrev={prev}
-              onNext={next}
-            />
+            <div className="hero__bag">
+              {/* Цветное свечение-градиент за сумкой */}
+              <span className="hero__glow" />
+
+              {/* Соседние коллекции выглядывают по бокам, бледнее и за центром */}
+              <img
+                className="hero__side hero__side--left"
+                src={sideLeft.image}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                decoding="async"
+                loading="lazy"
+              />
+              <img
+                className="hero__side hero__side--right"
+                src={sideRight.image}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                decoding="async"
+                loading="lazy"
+              />
+
+              <img
+                className="hero__img"
+                src={active.image}
+                alt={`Сумка ${active.name}`}
+                draggable={false}
+                decoding="async"
+              />
+            </div>
 
             <div className="hero__meta">
               <AnimatedText
@@ -143,60 +110,7 @@ export default function App() {
                 immediate
                 stagger={0.07}
               />
-
-              {/* Образцы цвета — переключают фото текущей коллекции */}
-              {active.variants.length > 1 && (
-                <div className="swatches" role="group" aria-label="Цвет">
-                  {active.variants.map((v, i) => (
-                    <button
-                      key={v.id}
-                      className={`swatch ${i === activeVariant ? 'swatch--on' : ''}`}
-                      style={{ ['--sw' as string]: v.swatch }}
-                      onClick={() => selectVariant(i)}
-                      aria-label={v.name}
-                      aria-pressed={i === activeVariant}
-                      title={v.name}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
-
-            {/* Навигатор коллекций — зафиксирован внизу, доступен с любой точки */}
-            <nav className="navbar" aria-label="Коллекции">
-              <button
-                className="navbtn navbtn--prev"
-                onClick={prev}
-                disabled={index === 0}
-                aria-label="Предыдущая коллекция"
-              >
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-
-              <div className="dots">
-                {collections.map((c, i) => (
-                  <button
-                    key={c.id}
-                    className={`dot ${i === index ? 'dot--on' : ''}`}
-                    onClick={() => setIndex(i)}
-                    aria-label={`Коллекция ${c.name}`}
-                  />
-                ))}
-              </div>
-
-              <button
-                className="navbtn navbtn--next"
-                onClick={next}
-                disabled={index === collections.length - 1}
-                aria-label="Следующая коллекция"
-              >
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </nav>
           </section>
         </section>
 

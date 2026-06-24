@@ -115,71 +115,40 @@ body {
   flex-direction: column;
 }
 
-/* ---------- Hero / карусель ---------- */
+/* ---------- Hero ---------- */
 .hero {
   position: relative;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* запас снизу, чтобы название не пересекалось с плавающей пилюлей точек */
-  padding-bottom: 92px;
 }
 
-.carousel {
+/* Сумка в герое. Появляется снизу из прозрачности; тело закреплено по верху,
+   бахрома свободно свисает вниз. */
+.hero__bag {
   position: relative;
   z-index: 1; /* ниже названия — бахрома уходит за него */
-  flex: none;
-  display: flex;
-  align-items: flex-start;
-  /* overflow видимый по вертикали — длинная бахрома свисает ниже;
-     по горизонтали соседние слайды обрезает вьюпорт (.app overflow:hidden) */
-  overflow: visible;
-  touch-action: pan-y;
-}
-.carousel__track {
-  display: flex;
-  width: 100%;
-  will-change: transform;
-}
-.slide {
-  flex: 0 0 100%;
-  /* высота «сцены» фиксирована (название/образцы остаются на месте).
-     padding-top опускает саму сумку вниз -> тело встаёт по центру экрана,
-     бахрома свисает ниже (за пределы .slide, за название). box-sizing:
-     border-box -> внешняя высота слайда не меняется. */
-  height: 56vh;
-  padding-top: 11vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* Появление сумки снизу из прозрачности. Тело сумки закреплено по верху,
-   бахрома свободно свисает вниз (за пределы .slide). */
-.slide__bag {
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   width: 100%;
   opacity: 0;
   transform: translateY(64px);
-  /* задержка 0.45s — сумка поднимается, когда логотип уже ушёл из центра наверх */
+  /* задержка 0.45s — сумка поднимается, когда логотип уже ушёл наверх */
   transition:
     opacity var(--reveal-ms, 1200ms) ease 0.45s,
     transform var(--reveal-ms, 1200ms) cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
 }
-.slide__bag--in { opacity: 1; transform: translateY(0); }
+.is-ready .hero__bag { opacity: 1; transform: translateY(0); }
 
 /* Цветное свечение за сумкой */
-.slide__glow {
+.hero__glow {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 92%;
   height: 78%;
-  transform: translate(-50%, -50%);
   z-index: 0;
   pointer-events: none;
   background:
@@ -188,7 +157,6 @@ body {
     radial-gradient(closest-side at 50% 55%,
       color-mix(in srgb, var(--c-edge) 85%, transparent), transparent 75%);
   filter: blur(34px);
-  opacity: 0.85;
   will-change: transform;
   transform: translate(-50%, -50%) translateZ(0);
   animation: glow-breathe 8s ease-in-out infinite;
@@ -198,102 +166,45 @@ body {
   50%      { transform: translate(-50%, -52%) scale(1.08); opacity: 0.95; }
 }
 
-/* Обёртка фото — даёт fade при смене цвета (компонент перемонтируется по key) */
-.slide__media {
+.hero__img {
   position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  animation: img-fade 0.8s cubic-bezier(0.33, 0, 0.2, 1) both;
-}
-@keyframes img-fade {
-  from { opacity: 0; transform: scale(0.99); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.slide__img {
-  /* фиксированная ШИРИНА -> тело сумки всегда одного размера;
-     высота свободная -> длинная бахрома уходит ниже */
-  width: 78%;
-  max-width: 320px;
+  z-index: 2; /* центральная сумка поверх боковых */
+  /* фиксированная ШИРИНА -> тело сумки одного размера; высота свободная -> бахрома ниже */
+  width: 86%;
+  max-width: 380px;
   height: auto;
   object-fit: contain;
-  /* очень мягкая, едва заметная тень — без тёмного «фона» под сумкой */
   filter: drop-shadow(0 16px 26px rgba(40, 36, 60, 0.14));
   user-select: none;
 }
 
-/* Плейсхолдер варианта (пока нет фото): мягкий силуэт в цвете образца */
-.slide__ph {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 72%;
-  height: 46vh;
-  border-radius: 22px;
-  border: 1px dashed color-mix(in srgb, var(--c-text) 22%, transparent);
-  background:
-    radial-gradient(120% 90% at 50% 35%, var(--sw, #ccc), transparent 70%),
-    color-mix(in srgb, var(--sw, #ccc) 30%, transparent);
-}
-.slide__ph-name {
-  font-family: 'Cormorant', serif;
-  font-size: 26px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--c-text);
-}
-.slide__ph-color {
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--c-text) 60%, transparent);
-}
-
-/* ---------- Образцы цвета ---------- */
-.swatches {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 14px;
-}
-.swatch {
-  position: relative;
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border-radius: 50%;
-  background: var(--sw);
-  border: 1px solid color-mix(in srgb, var(--c-text) 20%, transparent);
-  box-shadow: 0 2px 6px rgba(40, 36, 60, 0.18);
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  transition: outline-color 0.25s ease, transform 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-/* увеличенная прозрачная зона нажатия (видимый размер не меняется) */
-.swatch::after {
-  content: '';
+/* Соседние коллекции — выглядывают по бокам, за центральной сумкой и бледнее */
+.hero__side {
   position: absolute;
-  inset: -9px;
-  border-radius: 50%;
+  top: 50%;
+  z-index: 1; /* за центральной (.hero__img z-index 2), над свечением */
+  width: 58%;
+  max-width: 250px;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 12px 20px rgba(40, 36, 60, 0.1));
 }
-.swatch--on {
-  outline-color: var(--c-accent);
-  transform: scale(1.1);
+.hero__side--left {
+  left: 0;
+  transform: translate(-30%, -50%) scale(0.82);
+}
+.hero__side--right {
+  right: 0;
+  transform: translate(30%, -50%) scale(0.82);
 }
 
 /* ---------- Подпись коллекции ---------- */
 .hero__meta {
   position: relative;
-  z-index: 4; /* название и образцы поверх свисающей бахромы */
+  z-index: 4; /* название поверх фона */
   text-align: center;
   margin-top: 14px;
   opacity: 0;
@@ -316,145 +227,6 @@ body {
   letter-spacing: 0.32em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--c-text) 65%, transparent);
-}
-
-/* ---------- Навигатор коллекций: плавающая пилюля Apple Liquid Glass ----------
-   Зафиксирована внизу -> переключать коллекции можно из любой точки сайта.
-   Внутри: стрелка ‹  • • •  стрелка › */
-.navbar {
-  position: fixed;
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%) translateY(8px);
-  z-index: 20;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  padding: 7px 10px;
-  border-radius: 999px;
-  overflow: hidden; /* чтобы блик не вылезал за края */
-  isolation: isolate;
-
-  /* --- Liquid Glass --- */
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.45),
-    rgba(255, 255, 255, 0.12)
-  );
-  backdrop-filter: blur(10px) saturate(180%) brightness(1.06);
-  -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(1.06);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
-    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
-    inset 0 0 10px rgba(255, 255, 255, 0.25),
-    0 6px 20px rgba(40, 36, 60, 0.22),
-    0 1px 2px rgba(40, 36, 60, 0.12);
-
-  opacity: 0;
-  transition: opacity 0.7s ease 1.15s, transform 0.7s ease 1.15s;
-}
-.is-ready .navbar { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* Бегущий зеркальный блик по стеклу */
-.navbar::before {
-  content: '';
-  position: absolute;
-  inset: -40%;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    115deg,
-    transparent 38%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 62%
-  );
-  transform: translateX(-120%) rotate(0deg);
-  animation: glass-sheen 6s ease-in-out infinite;
-}
-@keyframes glass-sheen {
-  0%, 55% { transform: translateX(-120%); }
-  85%, 100% { transform: translateX(120%); }
-}
-
-/* Стрелки prev/next внутри пилюли */
-.navbtn {
-  position: relative;
-  z-index: 1; /* над бликом */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--c-text);
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background 0.25s ease, transform 0.2s ease, opacity 0.3s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.navbtn svg {
-  width: 17px;
-  height: 17px;
-}
-.navbtn:disabled {
-  opacity: 0.22;
-  cursor: default;
-}
-/* лёгкий «магнитный» сдвиг шеврона + подложка при наведении/нажатии */
-.navbtn:not(:disabled):hover {
-  background: color-mix(in srgb, var(--c-text) 9%, transparent);
-}
-.navbtn:not(:disabled):active {
-  transform: scale(0.86);
-}
-/* живой намёк: шеврон мягко покачивается в свою сторону */
-.navbtn--prev:not(:disabled) svg { animation: navnudge-l 2.8s ease-in-out infinite; }
-.navbtn--next:not(:disabled) svg { animation: navnudge-r 2.8s ease-in-out infinite; }
-.navbtn--prev:not(:disabled):hover svg { animation-play-state: paused; transform: translateX(-3px); transition: transform 0.3s ease; }
-.navbtn--next:not(:disabled):hover svg { animation-play-state: paused; transform: translateX(3px); transition: transform 0.3s ease; }
-@keyframes navnudge-l {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-2.5px); }
-}
-@keyframes navnudge-r {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(2.5px); }
-}
-
-/* Внутренний ряд точек */
-.dots {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.dot {
-  /* реальная точка маленькая, но кнопка с прозрачным паддингом — крупная зона тапа */
-  position: relative;
-  z-index: 1; /* над бликом */
-  appearance: none;
-  -webkit-appearance: none;
-  border: none;
-  cursor: pointer;
-  box-sizing: content-box;
-  width: 7px;
-  height: 7px;
-  padding: 7px;
-  border-radius: 50%;
-  background-color: color-mix(in srgb, var(--c-text) 38%, transparent);
-  background-clip: content-box;
-  transition: background-color 0.4s ease, width 0.4s ease, border-radius 0.4s ease;
-}
-.dot--on {
-  width: 20px;
-  border-radius: 7px;
-  background-color: var(--c-accent);
-  background-clip: content-box;
 }
 
 /* ============================================================
@@ -654,36 +426,132 @@ body {
 /* ============================================================
    Доступность: focus для клавиатуры + tap-отклик
    ============================================================ */
-.dot:focus-visible,
-.swatch:focus-visible,
-.navbtn:focus-visible,
 .social:focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 3px;
 }
-.swatch:active { transform: scale(0.94); }
-.dot:active { transform: scale(0.9); }
 .social:active { transform: translateY(0) scale(0.95); }
 
 /* Доступность: меньше движения */
 @media (prefers-reduced-motion: reduce) {
-  .slide__glow,
-  .navbar::before, /* glass-sheen */
-  .navbtn--prev svg,
-  .navbtn--next svg {
+  .hero__glow {
     animation: none !important;
   }
   .brand__logo {
     transition-duration: 0.3s !important;
   }
   /* мгновенное появление без сдвигов */
-  .slide__bag,
+  .hero__bag,
   .hero__meta,
-  .navbar,
   .block,
   .divider,
   .story {
     transition-duration: 0.2s !important;
     animation-duration: 0.2s !important;
   }
+}
+
+/* ============================================================
+   ЗАГЛУШКА ДЛЯ ДЕСКТОПА (сайт mobile-first)
+   Шуточная «ошибка» в фирменных цветах + QR на этот же сайт.
+   ============================================================ */
+.deskblock {
+  /* локальная палитра (рендерится вне App, где нет --c-* переменных) */
+  --c-bg: #f4f2f8;
+  --c-accent: #5f5a8e;
+  --c-text: #1f1d28;
+  --c-edge: #a79ed1;
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--c-text);
+  background:
+    radial-gradient(60% 55% at 25% 20%, color-mix(in srgb, var(--c-edge) 55%, transparent), transparent 70%),
+    radial-gradient(70% 60% at 80% 85%, color-mix(in srgb, var(--c-accent) 32%, transparent), transparent 70%),
+    var(--c-bg);
+}
+
+.deskblock__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 460px;
+  width: 100%;
+  padding: 40px 36px 30px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    0 18px 50px rgba(40, 36, 60, 0.22);
+}
+
+/* Строка-«код ошибки» — даёт ощущение системной ошибки, но в цвете бренда */
+.deskblock__code {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--c-accent) 85%, transparent);
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--c-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--c-accent) 8%, transparent);
+}
+
+.deskblock__title {
+  font-family: 'Cormorant', serif;
+  font-weight: 600;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  margin-top: 18px;
+}
+
+.deskblock__text {
+  margin-top: 12px;
+  max-width: 360px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--c-text) 78%, transparent);
+}
+
+.deskblock__qr {
+  margin-top: 26px;
+  padding: 14px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(40, 36, 60, 0.16);
+}
+.deskblock__qr img {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+.deskblock__social {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.deskblock__mark {
+  margin-top: 22px;
+  font-family: 'Cormorant', serif;
+  font-size: 20px;
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+  color: color-mix(in srgb, var(--c-text) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deskblock__card { backdrop-filter: blur(14px); }
 }
